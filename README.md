@@ -102,10 +102,17 @@ Open [http://localhost:3000](http://localhost:3000).
 ## Available scripts
 
 ```bash
-npm run dev        # Start local dev server
-npm run build      # Build for production
-npm run start      # Run production server
-npm run test       # Run Vitest test suite
+npm run dev              # Start local dev server
+npm run build            # Build for production
+npm run start            # Run production server
+npm run lint             # Run ESLint
+
+# Testing
+npm run test             # Run full Vitest suite
+npm run test:watch       # Watch mode
+npm run test:ui          # Vitest UI (browser)
+npm run test:coverage    # Coverage report
+npm run test:integration # Integration tests only
 ```
 
 ---
