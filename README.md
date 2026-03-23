@@ -125,6 +125,29 @@ The free vibe coding course is available at **[web3matters.xyz](https://web3matt
 
 ---
 
+## The course
+
+**Module 0 — Introduction:** [Watch on YouTube](https://youtu.be/Koovn9x-zlc)
+
+The full course (clone → run → restyle) lives at [web3matters.xyz](https://web3matters.xyz).
+
+---
+
+## Live app
+
+The production version of ShipMint is running at **[shipmint.art](https://shipmint.art)** — try it before you clone.
+
+---
+
+## Follow along
+
+- 🌐 Website: [web3matters.xyz](https://web3matters.xyz)
+- 📺 YouTube: [@Web3Matters](https://www.youtube.com/@Web3Matters)
+- 🐦 X / Twitter: [@Web3_Matters](https://x.com/Web3_Matters)
+- 🎵 TikTok: [@web3matters](https://www.tiktok.com/@web3matters)
+
+---
+
 ## License
 
 [MIT](./LICENSE)
