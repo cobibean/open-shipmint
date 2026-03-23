@@ -1,4 +1,4 @@
-# ShipMint
+# open-shipmint
 
 ShipMint is a Next.js app for buying credits with SOL, generating AI images, minting favorites as 1/1 Solana NFTs, and browsing a private gallery.
 
