@@ -1,0 +1,150 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String        @id @default(cuid())
+  walletAddress String        @unique
+  creditBalance Int           @default(0)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  generations   Generation[]
+  purchases     Purchase[]
+  mintRequests  MintRequest[]
+}
+
+model Generation {
+  id           String        @id @default(cuid())
+  userId       String
+  user         User          @relation(fields: [userId], references: [id])
+  prompt       String
+  modelId      String        @default("openai-dalle3")
+  modelName    String        @default("DALL-E 3")
+  creditCost   Int           @default(1)
+  ipfsCid      String
+  ipfsUrl      String
+  isMinted     Boolean       @default(false)
+  mintedAt     DateTime?
+  nftAddress   String?
+  mintTxHash   String?
+  nftTitle     String?
+  createdAt    DateTime      @default(now())
+  mintRequests MintRequest[]
+
+  @@index([userId, createdAt(sort: Desc)])
+}
+
+model Purchase {
+  id            String        @id @default(cuid())
+  userId        String
+  user          User          @relation(fields: [userId], references: [id])
+  packType      String
+  credits       Int
+  solAmount     Float
+  usdEquivalent Float
+  txSignature   String        @unique
+  status        String        @default("pending")
+  createdAt     DateTime      @default(now())
+  confirmedAt   DateTime?
+  swapAttempts  SwapAttempt[]
+
+  @@index([userId, createdAt(sort: Desc)])
+}
+
+model SwapAttempt {
+  id          String    @id @default(cuid())
+  purchaseId  String
+  purchase    Purchase  @relation(fields: [purchaseId], references: [id])
+  solAmount   Float
+  tokenMint   String
+  status      String    @default("pending") // pending, confirmed, failed
+  txSignature String?
+  attempts    Int       @default(0)
+  lastError   String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  confirmedAt DateTime?
+
+  @@index([status, attempts])
+  @@index([purchaseId])
+}
+
+model Nonce {
+  id            String   @id @default(cuid())
+  walletAddress String
+  nonce         String   @unique
+  expiresAt     DateTime
+  createdAt     DateTime @default(now())
+
+  @@index([walletAddress])
+}
+
+model GenerationModel {
+  id              String   @id @default(cuid())
+  provider        String   // "openai"
+  providerModelId String   // "dall-e-3", "gpt-image-1", "dall-e-2"
+  displayName     String   // "DALL-E 3"
+  creditCost      Int      // Dynamic pricing - adjustable via admin
+  isActive        Boolean  @default(true)
+  isDefault       Boolean  @default(false)
+  sortOrder       Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([provider, providerModelId])
+}
+
+// MintRequest tracks the pay-first minting flow
+// Flow: initiate (pending) -> payment verified (paid) -> minting (minting) -> complete (completed)
+// If minting fails after payment, status becomes 'refund_pending' -> 'refunded'
+model MintRequest {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  generationId  String
+  generation    Generation @relation(fields: [generationId], references: [id])
+
+  // NFT details (set during initiate)
+  nftTitle      String
+  metadataUri   String?   // IPFS URI for metadata (uploaded during minting phase)
+
+  // Payment tracking
+  solAmount     Float     // Mint fee in SOL
+  paymentTxSig  String?   @unique // User's payment transaction signature
+
+  // Minting tracking
+  nftAddress    String?   // Mint address after successful mint
+  mintTxSig     String?   // Minting transaction signature
+
+  // Refund tracking
+  refundTxSig   String?   // Refund transaction signature if minting failed
+  refundAmount  Float?    // Amount refunded (in SOL)
+
+  // Status: pending -> paid -> minting -> completed
+  //                         -> refund_pending -> refunded (if minting fails)
+  //         -> expired (if payment not received in time)
+  //         -> failed (permanent failure)
+  status        String    @default("pending")
+  errorMessage  String?   // Last error message if failed
+
+  // Retry tracking for minting
+  mintAttempts  Int       @default(0)
+
+  // Timestamps
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  paidAt        DateTime? // When payment was verified
+  completedAt   DateTime? // When minting completed successfully
+  refundedAt    DateTime? // When refund was sent
+  expiresAt     DateTime  // Request expires if not paid by this time
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([status, expiresAt])
+  @@index([status, mintAttempts])
+  @@index([generationId])
+}
